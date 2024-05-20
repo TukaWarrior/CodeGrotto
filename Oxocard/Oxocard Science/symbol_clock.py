@@ -1,4 +1,4 @@
-#Symbol TIme
+#Symbol Time
 def SymbolTime():
     drawArc(0, 0, 110, rad(0), rad(360))
     drawLine(0, 0, -60, -40)
