@@ -1,5 +1,7 @@
+// This code establishes an BLE connection to the Arduino. The AndroidManifest.xml needed some additional permissions.
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 void main() {
   runApp(MyApp());
@@ -27,6 +29,29 @@ class _MyHomePageState extends State<MyHomePage> {
   FlutterBlue flutterBlue = FlutterBlue.instance;
   BluetoothDevice? device;
   BluetoothCharacteristic? characteristic;
+
+  @override
+  void initState() {
+    super.initState();
+    requestPermissions();
+  }
+
+  Future<void> requestPermissions() async {
+    var status = await [
+      Permission.bluetooth,
+      Permission.bluetoothScan,
+      Permission.bluetoothConnect,
+      Permission.location
+    ].request();
+
+    if (status[Permission.bluetooth] != PermissionStatus.granted ||
+        status[Permission.bluetoothScan] != PermissionStatus.granted ||
+        status[Permission.bluetoothConnect] != PermissionStatus.granted ||
+        status[Permission.location] != PermissionStatus.granted) {
+      // Handle permission denial
+      print('Permission denied');
+    }
+  }
 
   void scanForDevices() {
     flutterBlue.startScan(timeout: Duration(seconds: 4));
