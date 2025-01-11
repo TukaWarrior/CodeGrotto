@@ -1,0 +1,4 @@
+interface = 1
+format = 1
+inputPath = src\main\java\ch\ldb\.input.txt
+outputPath = src\main\java\ch\ldb\.output.txt
