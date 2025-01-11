@@ -1,4 +1,4 @@
-package ch.ldb;
+package ch.ldb.observable_demo;
 
 public class FormatPlugin {
     public String transformInput(String data) {

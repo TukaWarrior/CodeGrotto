@@ -1,4 +1,4 @@
-package ch.ldb;
+package ch.ldb.observable_demo;
 
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;

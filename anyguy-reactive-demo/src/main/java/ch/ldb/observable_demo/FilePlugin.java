@@ -1,4 +1,4 @@
-package ch.ldb;
+package ch.ldb.observable_demo;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
