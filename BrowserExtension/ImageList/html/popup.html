@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Image Extractor</title>
+  <link rel="stylesheet" href="../css/popup.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Images on this page</h1>
+    </header>
+    
+    <main>
+      <div class="sort-controls">
+        <select id="sortDropdown">
+          <option value="oldest">Sort by: Oldest</option>
+          <option value="newest">Sort by: Newest</option>
+          <option value="resolution">Sort by: Resolution</option>
+        </select>
+      </div>
+      <div id="imageList" class="media-list"></div>
+    </main>
+  </div>
+  <script type="module" src="../js/popup.js"></script>
+</body>
+</html>
