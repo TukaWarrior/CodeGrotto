@@ -193,8 +193,59 @@ export function renderImageList(images) {
     extraBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>';
     extraBtn.title = "More Options";
     extraBtn.onclick = (event) => {
-      // Same dropdown code as before...
-      // [Code for dropdown omitted for brevity]
+      event.stopPropagation();
+      
+      // Create a simple dropdown menu
+      const dropdown = document.createElement('div');
+      dropdown.className = 'menu-dropdown';
+      
+      // Share option
+      const shareBtn = document.createElement('button');
+      shareBtn.textContent = 'Share';
+      shareBtn.className = 'menu-item';
+      shareBtn.onclick = (e) => {
+        e.stopPropagation();
+        
+        if (navigator.share) {
+          navigator.share({
+            title: 'Shared Image',
+            text: 'Check out this image',
+            url: src
+          }).catch(() => {
+            navigator.clipboard.writeText(src);
+            alert('Link copied to clipboard');
+          });
+        } else {
+          navigator.clipboard.writeText(src);
+          alert('Link copied to clipboard');
+        }
+        document.body.removeChild(dropdown);
+      };
+      
+      // Open in new tab option
+      const openBtn = document.createElement('button');
+      openBtn.textContent = 'Open in new tab';
+      openBtn.className = 'menu-item';
+      openBtn.onclick = (e) => {
+        e.stopPropagation();
+        window.open(src, '_blank');
+        document.body.removeChild(dropdown);
+      };
+      
+      dropdown.appendChild(shareBtn);
+      dropdown.appendChild(openBtn);
+      document.body.appendChild(dropdown);
+      
+      // Close when clicking outside
+      setTimeout(() => {
+        const closeHandler = (e) => {
+          if (!dropdown.contains(e.target) && e.target !== extraBtn) {
+            document.body.removeChild(dropdown);
+            document.removeEventListener('click', closeHandler);
+          }
+        };
+        document.addEventListener('click', closeHandler);
+      }, 0);
     };
 
     actions.appendChild(copyBtn);

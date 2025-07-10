@@ -4,10 +4,20 @@
 import { renderImageList } from './renderer.js';
 import { initializeSettings, getRefreshInterval, updateRefreshInterval } from './settings.js';
 
+// We need to define getAllSettings if it's not exported from settings.js
+function getAllSettings() {
+  // Return default settings if not available from settings.js
+  return {
+    refreshInterval: getRefreshInterval(),
+    refreshMode: 'manual'
+  };
+}
+
 // Track images with metadata
 let imageData = [];
 let currentSortMethod = 'oldest';
 let refreshInterval = null;
+let pendingImages = new Map(); // Track images that are currently loading
 
 function injectImageGrabber() {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -48,56 +58,65 @@ function addNewImage(src, timestamp) {
     return;
   }
   
-  imageData.push({
-    src,
+  // Check if this image is already in our tracking map
+  if (pendingImages.has(src)) {
+    return; // Already processing this image
+  }
+  
+  // Check if image already exists in our data
+  const existingIndex = imageData.findIndex(img => img.src === src);
+  if (existingIndex !== -1) {
+    return; // Already have this image
+  }
+  
+  // Create a placeholder and track it
+  pendingImages.set(src, {
     timestamp,
-    order: imageData.length,
-    width: 0,
-    height: 0,
-    resolution: 0,
-    loaded: false
+    loading: true
   });
-
+  
   // Get resolution data
   const img = new Image();
   
-  // Set a timeout to remove images that fail to load
+  // Set a timeout to clean up stalled loading images
   const loadTimeout = setTimeout(() => {
-    const index = imageData.findIndex(i => i.src === src && !i.loaded);
-    if (index !== -1) {
-      imageData.splice(index, 1);
-      sortAndRenderImages();
+    // Clean up if still pending
+    if (pendingImages.has(src)) {
+      pendingImages.delete(src);
     }
   }, 5000);
   
   img.onload = () => {
     clearTimeout(loadTimeout);
     
-    const item = imageData.find(i => i.src === src);
-    if (item) {
-      // Enhanced filtering - filter out small images that are likely tracking pixels
-      // Increased minimum size from 1x1 to more aggressively filter
-      if (img.naturalWidth <= 5 || img.naturalHeight <= 5) {
-        imageData = imageData.filter(i => i.src !== src);
-        sortAndRenderImages();
-        return;
-      }
-      
-      // Add a delay before showing new images to ensure they're stable
-      setTimeout(() => {
-        item.width = img.naturalWidth;
-        item.height = img.naturalHeight;
-        item.resolution = img.naturalWidth * img.naturalHeight;
-        item.loaded = true;
-        sortAndRenderImages();
-      }, 200);
+    // Enhanced filtering - filter out small images that are likely tracking pixels
+    if (img.naturalWidth <= 5 || img.naturalHeight <= 5) {
+      pendingImages.delete(src);
+      return;
     }
+    
+    // Only now add it to the actual image data
+    const newImage = {
+      src,
+      timestamp,
+      order: imageData.length,
+      width: img.naturalWidth,
+      height: img.naturalHeight,
+      resolution: img.naturalWidth * img.naturalHeight,
+      loaded: true
+    };
+    
+    // Remove from pending and add to actual data
+    pendingImages.delete(src);
+    imageData.push(newImage);
+    
+    // Update display
+    sortAndRenderImages();
   };
   
   img.onerror = () => {
     clearTimeout(loadTimeout);
-    imageData = imageData.filter(i => i.src !== src);
-    sortAndRenderImages();
+    pendingImages.delete(src);
   };
   
   img.src = src;
@@ -123,7 +142,6 @@ function handleNewImages(images) {
     const baseUrl = src.substring(0, extensionPos);
     
     // Instead of keeping all variants, we'll just use the base URL directly
-    // This will give us the original, uncropped version
     if (!imageGroups[baseUrl]) {
       imageGroups[baseUrl] = baseUrl; // Store only the base URL without parameters
     }
@@ -131,20 +149,21 @@ function handleNewImages(images) {
   
   // Process each base URL - they're already stripped of parameters
   Object.keys(imageGroups).forEach(baseUrl => {
-    // Check if we already have this base URL
+    // Check if we already have this base URL in our data
     const existingIndex = imageData.findIndex(img => 
       img.src === baseUrl || (img.src.startsWith(baseUrl) && 
         (img.src.length === baseUrl.length || img.src.charAt(baseUrl.length) === '?' || 
          img.src.charAt(baseUrl.length) === '#'))
     );
     
-    if (existingIndex === -1) {
-      // New image, add the clean base URL
+    // Check if we're already loading this URL
+    const isPending = pendingImages.has(baseUrl);
+    
+    if (existingIndex === -1 && !isPending) {
+      // New image that's not pending, add it
       addNewImage(baseUrl, timestamp);
     }
   });
-  
-  sortAndRenderImages();
 }
 
 function sortAndRenderImages() {
@@ -167,9 +186,31 @@ function sortAndRenderImages() {
   renderImageList(urls);
 }
 
+// Add this function right before initializePopup
+function setupRescanButton() {
+  const rescanBtn = document.getElementById('rescanBtn');
+  if (!rescanBtn) return;
+  
+  rescanBtn.addEventListener('click', () => {
+    // Add animation class
+    rescanBtn.classList.add('scanning');
+    
+    // Inject the image grabber
+    injectImageGrabber();
+    
+    // Remove animation class after animation completes
+    setTimeout(() => {
+      rescanBtn.classList.remove('scanning');
+    }, 1000);
+  });
+}
+
 async function initializePopup() {
   // Initialize settings first
   await initializeSettings();
+  
+  // Setup rescan button - ADD THIS LINE
+  setupRescanButton();
   
   // Initialize sorting dropdown
   const sortDropdown = document.getElementById('sortDropdown');
@@ -179,20 +220,41 @@ async function initializePopup() {
     sortAndRenderImages();
   });
   
-  // Initial grabber injection
+  // Initial grabber injection (always run once when popup opens)
   injectImageGrabber();
-  
-  // Set up regular refresh based on settings
-  const interval = getRefreshInterval();
-  refreshInterval = updateRefreshInterval(interval, injectImageGrabber);
-  
+
+  // Get current settings
+  const settings = getAllSettings();
+
+  // Set up regular refresh based on settings mode
+  if (settings.refreshMode === 'auto') {
+    refreshInterval = setInterval(injectImageGrabber, settings.refreshInterval);
+  } else {
+    // Manual mode - ensure no interval is running
+    if (refreshInterval) {
+      clearInterval(refreshInterval);
+      refreshInterval = null;
+    }
+  }
+
   // Listen for settings changes
   document.addEventListener('settingsChanged', (event) => {
-    if (event.detail && event.detail.refreshInterval) {
-      refreshInterval = updateRefreshInterval(
-        event.detail.refreshInterval, 
-        injectImageGrabber
-      );
+    if (event.detail) {
+      // Handle refresh mode change
+      if (event.detail.refreshMode) {
+        // Clear existing interval if any
+        if (refreshInterval) {
+          clearInterval(refreshInterval);
+          refreshInterval = null;
+        }
+        
+        // If auto mode is enabled, set up new interval
+        if (event.detail.refreshMode === 'auto') {
+          const interval = event.detail.refreshInterval || getRefreshInterval();
+          refreshInterval = setInterval(injectImageGrabber, interval);
+        }
+        // For manual mode, the interval remains cleared
+      }
     }
   });
   

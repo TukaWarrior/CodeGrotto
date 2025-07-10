@@ -6,13 +6,16 @@ body {
 }
 
 header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   background-color: #f0f0f0;
   padding: 10px;
   border-bottom: 1px solid #ddd;
 }
 
 header h1 {
-  margin: 0 0 10px 0;
+  margin: 0;
   font-size: 16px;
 }
 
@@ -85,12 +88,12 @@ select {
 }
 
 .icon-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
   width: 36px;
   height: 36px;
-  padding: 6px;
-  border: none;
-  background-color: #f7f7f7;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -108,6 +111,16 @@ select {
   width: 20px;
   height: 20px;
   fill: #555;
+}
+
+.rescan-btn:hover svg {
+  fill: #4285f4;
+  animation: spin 1s ease-in-out;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* Tooltip styles */
@@ -267,4 +280,10 @@ select {
   color: #fff;
   border: none;
   cursor: pointer;
+}
+
+/* Header controls */
+.header-controls {
+  display: flex;
+  gap: 8px;
 }
