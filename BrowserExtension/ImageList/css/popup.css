@@ -26,15 +26,42 @@ main {
 /* Sort controls */
 .sort-controls {
   margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-select {
-  width: 100%;
-  padding: 5px;
+#sortCriterion {
+  flex-grow: 1;
+  padding: 6px 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
   background-color: #fff;
   font-size: 14px;
+  cursor: pointer;
+}
+
+.sort-direction {
+  padding: 6px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #f7f7f7;
+}
+
+.sort-icon {
+  width: 18px;
+  height: 18px;
+  fill: #555;
+}
+
+/* Show only relevant path based on sort direction */
+.sort-ascending .sort-desc,
+.sort-descending .sort-asc {
+  display: none;
+}
+
+.sort-button:hover .sort-icon {
+  fill: #4285f4;
 }
 
 /* Image list */

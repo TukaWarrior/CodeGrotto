@@ -20,11 +20,16 @@
     
     <main>
       <div class="sort-controls">
-        <select id="sortDropdown">
-          <option value="oldest">Sort by: Oldest</option>
-          <option value="newest">Sort by: Newest</option>
+        <select id="sortCriterion">
+          <option value="timestamp">Sort by: Age</option>
           <option value="resolution">Sort by: Resolution</option>
         </select>
+        <button id="sortDirection" class="icon-button sort-direction" title="Toggle sort direction">
+          <svg class="sort-icon" viewBox="0 0 24 24">
+            <path class="sort-asc" d="M7 14l5-5 5 5z"></path>
+            <path class="sort-desc" d="M7 10l5 5 5-5z"></path>
+          </svg>
+        </button>
       </div>
       <div id="imageList" class="media-list"></div>
     </main>

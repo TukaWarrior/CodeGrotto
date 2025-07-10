@@ -1,5 +1,6 @@
 // settings.js - Settings UI management
 import { loadSettings, saveSettings, getAllSettings } from './settings-store.js';
+import { eventBus, Events } from '../../core/events.js';
 
 // Global reference to refresh interval handler
 let refreshIntervalId = null;
@@ -131,13 +132,10 @@ function showSettingsPanel() {
     });
     
     // Apply settings
-    const event = new CustomEvent('settingsChanged', { 
-      detail: { 
-        refreshInterval: newRefreshInterval,
-        refreshMode: newRefreshMode
-      } 
+    eventBus.publish(Events.SETTINGS_CHANGED, {
+      refreshInterval: newRefreshInterval,
+      refreshMode: newRefreshMode
     });
-    document.dispatchEvent(event);
     
     // Close panel
     document.body.removeChild(panel);

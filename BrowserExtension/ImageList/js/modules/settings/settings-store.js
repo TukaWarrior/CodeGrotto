@@ -3,6 +3,8 @@ const DEFAULT_SETTINGS = {
   refreshInterval: 1000,     // milliseconds
   refreshMode: 'manual',     // 'manual' or 'auto'
   minImageSize: 1,           // filter out images smaller than this
+  sortCriterion: 'timestamp', // What to sort by
+  sortDirection: 'asc',      // Sort direction (asc/desc)
   autoDownload: false,       // future feature
   darkMode: false            // future feature
 };

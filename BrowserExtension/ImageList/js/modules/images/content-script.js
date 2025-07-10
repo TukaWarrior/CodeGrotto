@@ -1,4 +1,4 @@
-// grabber-images.js
+// content-script.js - Script that runs in the page context to collect images
 (function() {
   function collectImages() {
     let images = [];
@@ -45,6 +45,8 @@
       type: 'newImages',
       images: images
     });
+
+    console.log("Found images:", images.length);
   }
   
   // Collect images immediately
