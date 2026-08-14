@@ -8,5 +8,11 @@
   "action": {
     "default_popup": "html/popup.html",
     "default_icon": "images/icon.png"
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["js/modules/*/content-script.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }

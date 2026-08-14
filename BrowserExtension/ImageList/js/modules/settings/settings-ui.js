@@ -1,5 +1,6 @@
 // settings.js - Settings UI management
 import { loadSettings, saveSettings, getAllSettings } from './settings-store.js';
+import { eventBus, Events } from '../../core/events.js';
 
 // Global reference to refresh interval handler
 let refreshIntervalId = null;
@@ -19,15 +20,20 @@ export function getRefreshInterval() {
 }
 
 export function updateRefreshInterval(interval, callback) {
+  // Always clear the existing interval first
   if (refreshIntervalId) {
     clearInterval(refreshIntervalId);
+    refreshIntervalId = null;
   }
   
-  if (typeof callback === 'function' && interval > 0) {
+  // Only set a new interval if auto mode is active
+  const settings = getAllSettings();
+  if (settings.refreshMode === 'auto' && typeof callback === 'function' && interval > 0) {
     refreshIntervalId = setInterval(callback, interval);
+    return refreshIntervalId;
   }
   
-  return refreshIntervalId;
+  return null;
 }
 
 function showSettingsPanel() {
@@ -81,6 +87,34 @@ function showSettingsPanel() {
   refreshDiv.appendChild(refreshLabel);
   refreshDiv.appendChild(refreshInput);
   content.appendChild(refreshDiv);
+
+  // Refresh mode setting
+  const refreshModeDiv = document.createElement('div');
+  refreshModeDiv.className = 'settings-group';
+
+  const refreshModeLabel = document.createElement('label');
+  refreshModeLabel.textContent = 'Refresh mode: ';
+  refreshModeDiv.appendChild(refreshModeLabel);
+
+  const refreshModeSelect = document.createElement('select');
+  refreshModeSelect.className = 'settings-input';
+
+  // Manual option
+  const manualOption = document.createElement('option');
+  manualOption.value = 'manual';
+  manualOption.textContent = 'Manual (button only)';
+  if (settings.refreshMode === 'manual') manualOption.selected = true;
+  refreshModeSelect.appendChild(manualOption);
+
+  // Auto option
+  const autoOption = document.createElement('option');
+  autoOption.value = 'auto';
+  autoOption.textContent = 'Automatic';
+  if (settings.refreshMode === 'auto') autoOption.selected = true;
+  refreshModeSelect.appendChild(autoOption);
+
+  refreshModeDiv.appendChild(refreshModeSelect);
+  content.appendChild(refreshModeDiv);
   
   // Save button
   const saveBtn = document.createElement('button');
@@ -89,17 +123,19 @@ function showSettingsPanel() {
   saveBtn.onclick = async () => {
     // Get values from inputs
     const newRefreshInterval = parseInt(refreshInput.value, 10);
+    const newRefreshMode = refreshModeSelect.value;
     
     // Save to storage
     await saveSettings({
-      refreshInterval: newRefreshInterval
+      refreshInterval: newRefreshInterval,
+      refreshMode: newRefreshMode
     });
     
     // Apply settings
-    const event = new CustomEvent('settingsChanged', { 
-      detail: { refreshInterval: newRefreshInterval } 
+    eventBus.publish(Events.SETTINGS_CHANGED, {
+      refreshInterval: newRefreshInterval,
+      refreshMode: newRefreshMode
     });
-    document.dispatchEvent(event);
     
     // Close panel
     document.body.removeChild(panel);

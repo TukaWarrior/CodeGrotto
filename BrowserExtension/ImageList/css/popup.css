@@ -6,13 +6,16 @@ body {
 }
 
 header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   background-color: #f0f0f0;
   padding: 10px;
   border-bottom: 1px solid #ddd;
 }
 
 header h1 {
-  margin: 0 0 10px 0;
+  margin: 0;
   font-size: 16px;
 }
 
@@ -23,15 +26,42 @@ main {
 /* Sort controls */
 .sort-controls {
   margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-select {
-  width: 100%;
-  padding: 5px;
+#sortCriterion {
+  flex-grow: 1;
+  padding: 6px 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
   background-color: #fff;
   font-size: 14px;
+  cursor: pointer;
+}
+
+.sort-direction {
+  padding: 6px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #f7f7f7;
+}
+
+.sort-icon {
+  width: 18px;
+  height: 18px;
+  fill: #555;
+}
+
+/* Show only relevant path based on sort direction */
+.sort-ascending .sort-desc,
+.sort-descending .sort-asc {
+  display: none;
+}
+
+.sort-button:hover .sort-icon {
+  fill: #4285f4;
 }
 
 /* Image list */
@@ -85,12 +115,12 @@ select {
 }
 
 .icon-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
   width: 36px;
   height: 36px;
-  padding: 6px;
-  border: none;
-  background-color: #f7f7f7;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -108,6 +138,16 @@ select {
   width: 20px;
   height: 20px;
   fill: #555;
+}
+
+.rescan-btn:hover svg {
+  fill: #4285f4;
+  animation: spin 1s ease-in-out;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* Tooltip styles */
@@ -267,4 +307,10 @@ select {
   color: #fff;
   border: none;
   cursor: pointer;
+}
+
+/* Header controls */
+.header-controls {
+  display: flex;
+  gap: 8px;
 }
